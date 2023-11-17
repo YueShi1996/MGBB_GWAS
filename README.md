@@ -1,7 +1,7 @@
 ### ID extraction
 
 first extract a ID list
-```
+```shell
 folders=("0410" "0411" "0412" "0413")
 
 module load Plink/2.0
