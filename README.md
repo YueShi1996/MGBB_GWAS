@@ -35,7 +35,6 @@ plink2 \
 done
 done
 ```
-
 merge all chromosomes
 ```shell
 mkdir /PHShome/ys724/scratch/IDsubset/merge/
@@ -89,7 +88,7 @@ ls *_common.bim | sed -e 's/.bim//' > merge.txt
 plink --merge-list merge.txt --allow-no-sex --make-bed --out MGBB_EUR
 ```
 
-QC
+###Quality Control
 ```shell
 cd /PHShome/ys724/scratch/IDsubset/merge/
 
@@ -113,5 +112,61 @@ plink2 \
   --bfile MGBB_EUR_geno_filtered \
   --mind 0.1 \
   --make-bed \
-  --out /PHShome/ys724/scratch/IDsubset/merge/MGBB_EUR_geno_mind__filtered
+  --out /PHShome/ys724/Documents/GMBI_endometriosis/MGBB/MGBB_EUR_final
+```
+###GWAS
+```shell
+module load Plink/2.0
+
+cd /PHShome/ys724/Documents/GMBI_endometriosis/MGBB
+mkdir /PHShome/ys724/Documents/GMBI_endometriosis/assoc/
+
+folders=("W" "Wex" "SCNv1" "SCNv2" "PCNv1" "PCNv2")
+
+for fl in "${folders[@]}"; do
+
+plink2 \
+  --bfile MGBB_EUR \
+  --glm hide-covar\
+  --allow-no-sex \
+  --pheno /PHShome/ys724/Documents/GMBI_endometriosis/phenotype/${fl}_EUR_pheno_modified.txt \
+  --covar /PHShome/ys724/Documents/GMBI_endometriosis/phenotype/${fl}_EUR_age_cleaned.txt \
+  --out /PHShome/ys724/Documents/GMBI_endometriosis/assoc/MGBB_${fl}_EUR
+
+done
+```
+plot manhattan and QQ plot, screen out variants with gwas statistically significance
+```R
+args <- commandArgs(TRUE)
+
+assoc_unadj <- read.table(paste(args[1],".endo.glm.logistic",sep=""),header=TRUE)
+assoc_unadj_final <- na.omit(assoc_unadj)
+colnames(assoc_unadj_final) <- c( "CHR", "BP","SNP","REF","ALT","A1","TEST","OBS_CT","OR","LOG(OR)_SE","Z_STAT","P")
+assoc_unadj_final_sig <- assoc_unadj_final[assoc_unadj_final[,12] < 0.000001,]
+
+# Save assoc_unadj_final_sig to a text file
+output_filename <- paste(args[1], "_sig.txt", sep="")
+write.table(assoc_unadj_final_sig, file=output_filename, row.names=FALSE, sep="\t")
+
+library(qqman)
+png(paste(args[1],".manhattan.png",sep=""))
+manhattan(assoc_unadj_final,main="Manhattan Plot")
+dev.off()
+
+png(paste(args[1],".qq.png",sep=""))
+qq(assoc_unadj_final$P, main="Q-Q Plot")
+dev.off()
+```
+```shell
+folders=("MGBB_W_EUR" "MGBB_Wex_EUR" "MGBB_PCNv1_EUR" "MGBB_PCNv2_EUR" "MGBB_SCNv1_EUR" "MGBB_SCNv2_EUR")
+
+module load R/3.5.1-foss-2018b
+
+cd /PHShome/ys724/Documents/GMBI_endometriosis/assoc
+
+for fl in "${folders[@]}"; do
+
+Rscript glm_result.R ${fl} 2> error_${fl}_log.txt
+
+done
 ```
