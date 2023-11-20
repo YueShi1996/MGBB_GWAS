@@ -88,7 +88,7 @@ ls *_common.bim | sed -e 's/.bim//' > merge.txt
 plink --merge-list merge.txt --allow-no-sex --make-bed --out MGBB_EUR
 ```
 
-###Quality Control
+### Quality Control
 ```shell
 cd /PHShome/ys724/scratch/IDsubset/merge/
 
@@ -114,7 +114,7 @@ plink2 \
   --make-bed \
   --out /PHShome/ys724/Documents/GMBI_endometriosis/MGBB/MGBB_EUR_final
 ```
-###GWAS
+### GWAS
 ```shell
 module load Plink/2.0
 
